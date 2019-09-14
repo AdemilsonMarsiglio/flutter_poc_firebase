@@ -1,12 +1,11 @@
+import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_poc_firebase/auth.dart';
+import 'package:flutter_poc_firebase/bloc/session.dart';
 
 class LoginPage extends StatefulWidget {
   
-  LoginPage({Key key, this.auth}) : super(key: key);
-
-  final BaseAuth auth;
+  LoginPage({Key key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -19,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passFocusNode = FocusNode();
   final globalKey = GlobalKey<ScaffoldState>();
 
-  bool _isLoading;
+  bool _isLoading = false;
 
 
   @override
@@ -160,34 +159,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _isLoading = true;
     });
-  
-    String userId = "";
 
+    final SessionBloc bloc = BlocProvider.getBloc<SessionBloc>();
+    
     try {
-      userId = await widget.auth.signIn(_email, _password);
-      print('Signed in: $userId');
-
-      if (userId.length > 0 && userId != null) {
-        _snackInfo("Usuario autenticado!");
-      }
-    } catch (e) {
-
-      if ("ERROR_USER_NOT_FOUND" == e.code) 
-        return _snackWarn("Usuário não encontrado.");
+      await bloc.login(_email, _password);
       
-      if ("ERROR_INVALID_EMAIL" == e.code) 
-        return _snackWarn("E-mail inválido.");
+      String mensagemError = bloc.mensagemError;
 
-      if ("ERROR_WRONG_PASSWORD" == e.code) 
-        return _snackWarn("Senha incorreta ou usuário não encontrado.");
-        
-      if ("ERROR_TOO_MANY_REQUESTS" == e.code) 
-        return _snackWarn("Ops! Percebemos um comportamento estranho, recebemos muitas requisições inválidas de seu dispositivo. Tente novamente mais tarde.");
-
-
-
-      _snackWarn(e.message);
-      print('Error: $e');
+      if (mensagemError != null) {
+        _snackWarn(mensagemError);
+      }
+    } catch(e) {
+      _snackWarn(e);
     } finally {
       setState(() {
         _isLoading = false;

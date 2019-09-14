@@ -1,6 +1,9 @@
+import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_poc_firebase/auth.dart';
-import 'package:flutter_poc_firebase/login.dart';
+import 'package:flutter_poc_firebase/repository/auth.dart';
+import 'package:flutter_poc_firebase/bloc/session.dart';
+import 'package:flutter_poc_firebase/view/home.dart';
+import 'package:flutter_poc_firebase/view/login.dart';
 
 
 
@@ -11,12 +14,26 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login Firebase',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    
+    return BlocProvider(
+       child: MaterialApp(
+        title: 'Login Firebase',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: Consumer<SessionBloc>(
+          builder: (BuildContext context, SessionBloc sessionBloc) {
+            if (sessionBloc.uid == null) {
+              return LoginPage();
+            }
+            
+            return HomePage();
+          },
+        ),
       ),
-      home: LoginPage(auth: Auth(),),
+      blocs: [
+        Bloc((i) => SessionBloc(auth: Auth())),
+      ],
     );
   }
 }
