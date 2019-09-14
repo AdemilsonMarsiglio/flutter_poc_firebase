@@ -3,12 +3,21 @@ import 'package:flutter_poc_firebase/repository/auth.dart';
 
 class SessionBloc extends BlocBase {
 
-  SessionBloc({this.auth});
+  SessionBloc(Auth auth) {
+    this.auth = auth;
+    _getCurrentUser();
+  }
 
   Auth auth;
   
   String uid;
   String mensagemError;
+
+  _getCurrentUser() async {
+    uid = await auth.getCurrentUser();
+    print("Inicial uid: $uid");
+    notifyListeners();
+  }
 
   login(String _email, String _password) async {
     uid = null;
@@ -34,6 +43,9 @@ class SessionBloc extends BlocBase {
         
       if ("ERROR_TOO_MANY_REQUESTS" == e.code) 
         return mensagemError = ("Ops! Percebemos um comportamento estranho, recebemos muitas requisições inválidas de seu dispositivo. Tente novamente mais tarde.");
+      
+      if ("ERROR_USER_DISABLED" == e.code) 
+        return mensagemError = ("Ops! Sua conta está bloqueada. Entre em contato com nossa equipe.");
 
       mensagemError = (e.message);
       print('Error: $e');

@@ -23,6 +23,8 @@ class MyApp extends StatelessWidget {
         ),
         home: Consumer<SessionBloc>(
           builder: (BuildContext context, SessionBloc sessionBloc) {
+            print("sessionBloc.uid ---> ${sessionBloc.uid}");
+            
             if (sessionBloc.uid == null) {
               return LoginPage();
             }
@@ -32,7 +34,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       blocs: [
-        Bloc((i) => SessionBloc(auth: Auth())),
+        Bloc((i) => SessionBloc(Auth())),
       ],
     );
   }
