@@ -14,7 +14,7 @@ class FormPage extends StatefulWidget {
 
 class _FormPageState extends State<FormPage> {
 
-
+  final globalKey = GlobalKey<ScaffoldState>();
   final _titleController = TextEditingController();
   final _subtitleController = TextEditingController();
   final _textController = TextEditingController();
@@ -57,6 +57,7 @@ class _FormPageState extends State<FormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: globalKey,
       body: NestedScrollView(
         controller: _scrollController,
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
@@ -116,6 +117,10 @@ class _FormPageState extends State<FormPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           
+          if (_titleController.text.isEmpty) {
+            return _snackWarn("Informe o titulo para continuar...");
+          }
+ 
           var obj = {
             'title': _titleController.text,
             'subtitle':  _subtitleController.text,
@@ -134,6 +139,18 @@ class _FormPageState extends State<FormPage> {
         child: Icon(Icons.save),
       ),
     );
+  }
+
+  _snackWarn(text) {
+    final snackbar = SnackBar(
+      content: Text(text),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.amber,
+      duration: Duration(seconds: 1),
+    );
+
+    globalKey.currentState.removeCurrentSnackBar();
+    globalKey.currentState.showSnackBar(snackbar);
   }
 
   _widgetEmail() {
