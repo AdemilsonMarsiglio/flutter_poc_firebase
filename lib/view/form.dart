@@ -18,6 +18,7 @@ class _FormPageState extends State<FormPage> {
   final _titleController = TextEditingController();
   final _subtitleController = TextEditingController();
   final _textController = TextEditingController();
+  final _linkController = TextEditingController();
   
   final _subtitleFocusNode = FocusNode();
   final _textFocusNode = FocusNode();
@@ -30,9 +31,18 @@ class _FormPageState extends State<FormPage> {
   void initState() {
     super.initState();
 
-    _titleController.text = widget.document['title'];
-    _subtitleController.text = widget.document['subtitle'];
-    _textController.text = widget.document['body'];
+    if (widget.document != null) {
+      _titleController.text = widget.document['title'];
+      _subtitleController.text = widget.document['subtitle'];
+      _textController.text = widget.document['body'];
+      _linkController.text = widget.document['image'];
+    } else {
+      _titleController.text = "";
+      _subtitleController.text = "";
+      _textController.text = "";
+      _linkController.text = "";
+    }
+    
 
     _scrollController = ScrollController();
     _scrollController.addListener(_scrollListener);
@@ -47,33 +57,6 @@ class _FormPageState extends State<FormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.document == null ? "Novo Post" : widget.document['title']),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        actions: <Widget>[
-          widget.document == null 
-            ? Text("") 
-            : IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: () {
-                widget.document.reference.delete();
-                Navigator.of(context).pop();
-              },
-            )
-        ],
-      ),
-      // body: ListView(
-      //   children: <Widget>[
-      //     _widgetEmail(),
-      //     _widgetSubtitle(),
-      //     _widgetText()
-      //   ],
-      // ),
       body: NestedScrollView(
         controller: _scrollController,
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
@@ -86,7 +69,18 @@ class _FormPageState extends State<FormPage> {
               iconTheme: IconThemeData(
                 color: isShrink ? Theme.of(context).textTheme.subtitle.color : Colors.white,
               ),
-              elevation: 0,
+              elevation: 5,
+              actions: <Widget>[
+                widget.document == null 
+                  ? Text("") 
+                  : IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      widget.document.reference.delete();
+                      Navigator.of(context).pop();
+                    },
+                  )
+              ],
               flexibleSpace: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
                 return FlexibleSpaceBar(    
                   title: Text(
@@ -96,18 +90,12 @@ class _FormPageState extends State<FormPage> {
                       color: isShrink ? Theme.of(context).textTheme.subtitle.color : Colors.white,
                     )
                   ),
-                  background: CachedNetworkImage(
+                  background: widget.document == null || widget.document['image'] == null || widget.document['image'].toString().isEmpty
+                    ? Center() 
+                    : CachedNetworkImage(
                       imageUrl: widget.document['image'],
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
-                          image: DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.cover
-                          ),
-                        ),
-                      ),
-                      placeholder: (context, url) => new CircularProgressIndicator(),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Center(child: CircularProgressIndicator(),),
                       errorWidget: (context, url, error) => new Icon(Icons.error),
                   )
                 );
@@ -115,7 +103,15 @@ class _FormPageState extends State<FormPage> {
             ),
           ];
         },
-        // body: ,
+        body: ListView(
+          padding: EdgeInsets.only(top: 10, bottom: 70),
+          children: <Widget>[
+            _widgetEmail(),
+            _widgetSubtitle(),
+            _widgetText(),
+            _widgetLink()
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -123,10 +119,17 @@ class _FormPageState extends State<FormPage> {
           var obj = {
             'title': _titleController.text,
             'subtitle':  _subtitleController.text,
-            'body': _textController.text
+            'body': _textController.text,
+            'image': _linkController.text,
           };
           
-          widget.document.reference.updateData(obj);
+          if (widget.document != null) 
+            widget.document.reference.updateData(obj);
+          else 
+            Firestore.instance.collection('posts').document().setData(obj);
+          
+
+          Navigator.of(context).pop();
         },
         child: Icon(Icons.save),
       ),
@@ -135,11 +138,11 @@ class _FormPageState extends State<FormPage> {
 
   _widgetEmail() {
     return Padding(
-      padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 10),
+      padding: EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        elevation: 10,
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        elevation: 5,
         child: TextFormField(
           controller: _titleController,
           keyboardType: TextInputType.emailAddress,
@@ -165,11 +168,11 @@ class _FormPageState extends State<FormPage> {
 
   _widgetSubtitle() {
     return Padding(
-      padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 10),
+      padding: EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 10),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        elevation: 10,
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        elevation: 5,
         child: TextFormField(
           controller: _subtitleController,
           focusNode: _subtitleFocusNode,
@@ -196,7 +199,7 @@ class _FormPageState extends State<FormPage> {
 
   _widgetText() {
     return Padding(
-      padding: EdgeInsets.only(top: 50, left: 20, right: 20, bottom: 10),
+      padding: EdgeInsets.only(top: 10, left: 20, right: 20, bottom: 10),
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(20.0)),
@@ -220,7 +223,34 @@ class _FormPageState extends State<FormPage> {
               color: Colors.grey,
               fontSize: 15
             ),
-            labelText: "Text"
+            labelText: "Text",
+            alignLabelWithHint: true
+          ),
+        ),
+      ),
+    );
+  }
+
+  _widgetLink() {
+    return Padding(
+      padding: EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 10),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(10.0)),
+        elevation: 5,
+        child: TextFormField(
+          controller: _linkController,
+          keyboardType: TextInputType.url,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0)),
+              borderSide: BorderSide.none,
+            ),
+            hintStyle: TextStyle(
+              color: Colors.grey,
+              fontSize: 15
+            ),
+            labelText: "Link Image"
           ),
         ),
       ),

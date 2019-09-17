@@ -49,34 +49,25 @@ class _HomePageState extends State<HomePage> {
                             context,
                             MaterialPageRoute(builder: (context) => FormPage(document: document,)),
                           );
-                          
-                          String subtitle = document['subtitle'];
-
-                          if (subtitle == null) {
-                            subtitle = "";
-                          }
-                          document.reference.updateData({
-                            'subtitle':  subtitle + " edit"
-                          });
                         },
                         leading: CircleAvatar(
-                          child: Text(document['title'].substring(0, 1))
-                          // child: document['image'] == null 
-                          //         ? Text(document['title'].substring(0, 1))
-                          //         : CachedNetworkImage(
-                          //             imageUrl: document['image'],
-                          //             imageBuilder: (context, imageProvider) => Container(
-                          //               decoration: BoxDecoration(
-                          //                 borderRadius: BorderRadius.circular(50),
-                          //                 image: DecorationImage(
-                          //                   image: imageProvider,
-                          //                   fit: BoxFit.cover
-                          //                 ),
-                          //               ),
-                          //             ),
-                          //             placeholder: (context, url) => new CircularProgressIndicator(),
-                          //             errorWidget: (context, url, error) => new Icon(Icons.error),
-                          //         )
+                          // child: Text(document['title'].substring(0, 1))
+                          child: document['image'] == null || document['image'].toString().isEmpty
+                                  ? Text(document['title'].substring(0, 1))
+                                  : CachedNetworkImage(
+                                      imageUrl: document['image'],
+                                      imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(50),
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover
+                                          ),
+                                        ),
+                                      ),
+                                      placeholder: (context, url) => CircularProgressIndicator(),
+                                      errorWidget: (context, url, error) => Icon(Icons.error),
+                                  )
                         ),
                         title: new Text(document['title']),
                         subtitle: new Text(document['subtitle'] == null ? "" : document['subtitle']),
